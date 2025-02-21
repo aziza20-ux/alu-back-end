@@ -1,22 +1,50 @@
 #!/usr/bin/python3
-# Using what you did in the task #0, extend
-# your Python script to export data in the CSV format.
+""""Module"""
 
+import csv
+import json
 import requests
-import sys
+from sys import argv
 
 
 if __name__ == "__main__":
-    USER_ID = sys.argv[1]
-    jsonplaceholder = 'https://jsonplaceholder.typicode.com/users'
-    url = jsonplaceholder + '/' + USER_ID
-    response = requests.get(url)
-    username = response.json().get('username')
-    todo_url = url + '/todos'
-    response = requests.get(todo_url)
-    tasks = response.json()
-    with open(USER_ID + '.csv', 'w') as f:
-        for task in tasks:
-            f.write('"{}","{}","{}","{}"\n'.format(USER_ID, username,
-                                                task.get('completed'),
-                                                task.get('title')))
+    """
+        request user info by employee ID
+    """
+    request_employee = requests.get(
+        'https://jsonplaceholder.typicode.com/users/{}/'.format(argv[1]))
+    """
+        convert json to dictionary
+    """
+    user = json.loads(request_employee.text)
+    """
+        extract username
+    """
+    username = user.get("username")
+
+    """
+        request user's TODO list
+    """
+    request_todos = requests.get(
+        'https://jsonplaceholder.typicode.com/users/{}/todos'.format(argv[1]))
+    """
+        dictionary to store task status(completed) in boolean format
+    """
+    tasks = {}
+    """
+        convert json to list of dictionaries
+    """
+    user_todos = json.loads(request_todos.text)
+    """
+        loop through dictionary & get completed tasks
+    """
+    for dictionary in user_todos:
+        tasks.update({dictionary.get("title"): dictionary.get("completed")})
+
+    """
+        export to CSV
+    """
+    with open('{}.csv'.format(argv[1]), mode='w') as file:
+        file_editor = csv.writer(file, delimiter=',', quoting=csv.QUOTE_ALL)
+        for k, v in tasks.items():
+            file_editor.writerow([argv[1], username, v, k])

@@ -1,27 +1,27 @@
 #!/usr/bin/python3
-# Using what you did in the task #0, extend your Python
-# script to export data in the JSON format.
+""""Module"""
 
 import json
 import requests
 import sys
 
+if __name__ == '__main__':
+    employee_id = sys.argv[1]
+    user_url = "https://jsonplaceholder.typicode.com/users/{}" \
+        .format(employee_id)
+    todos_url = "https://jsonplaceholder.typicode.com/users/{}/todos/" \
+        .format(employee_id)
 
-if __name__ == "__main__":
-    USER_ID = sys.argv[1]
-    jsonplaceholder = 'https://jsonplaceholder.typicode.com/users'
-    url = jsonplaceholder + '/' + USER_ID
-    response = requests.get(url)
-    username = response.json().get('username')
-    todo_url = url + '/todos'
-    response = requests.get(todo_url)
-    tasks = response.json()
-    dict = {USER_ID: []}
-    for task in tasks:
-        dict[USER_ID].append({
-            "task": task.get("title"),
-            "completed": task.get("completed"),
-            "username": username
-        })
-        with open('{}.json'.format(USER_ID), 'w') as f:
-            json.dump(dict, f)
+    user_info = requests.request('GET', user_url).json()
+    todos_info = requests.request('GET', todos_url).json()
+
+    employee_username = user_info["username"]
+
+    todos_info_sorted = [
+        dict(zip(["task", "completed", "username"],
+                 [task["title"], task["completed"], employee_username]))
+        for task in todos_info]
+
+    user_dict = {str(employee_id): todos_info_sorted}
+    with open(str(employee_id) + '.json', "w") as file:
+        file.write(json.dumps(user_dict))
